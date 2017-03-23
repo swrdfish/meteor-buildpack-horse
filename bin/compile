@@ -142,8 +142,7 @@ meteor npm install
 # bundling, or it will recurse, trying to bundle up its own bundling.
 
 echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
-BUNDLE_DEST="$BUILD_DIR/.heroku/build/"
-mkdir -p "$BUNDLE_DEST"
+BUNDLE_DEST=`mktemp -d "/tmp/build-XXXX"`
 
 # The actual invocation of `meteor build`!
 HOME="$BUILD_DIR/.heroku/meteor" meteor build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
@@ -157,6 +156,9 @@ echo "-----> Installing npm production dependencies on built slug"
 if [ -e "$BUNDLE_DEST"/bundle/programs/server/package.json ]; then
   cd "$BUNDLE_DEST"/bundle/programs/server
   meteor npm install --production
+  mv $BUNDLE_DEST/bundle "$BUILD_DIR/.heroku/build/bundle"
+  header "$BUILD_DIR/.heroku/build/bundle"
+  rmdir $BUNDLE_DEST
   cd "$BUILD_DIR"
 fi
 
