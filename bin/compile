@@ -58,7 +58,7 @@ handle_failure() {
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE"
   warn_econnreset "$LOG_FILE"
-  warn_young_yarn "$LOG_FILE"
+  # warn_young_yarn "$LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
@@ -107,15 +107,12 @@ header "Installing reaction-cli"
 npm install reaction-cli
 
 
-header "Generate plugin import files"
-"$BUILD_DIR"/node_modules/.bin/reaction plugins Load
-
 
 #
 # Build the meteor app!
 #
-
 cd "$BUILD_DIR"
+
 
 # Determine if we have --server-only flag capability. Allow non-zero return from grep.
 echo "-----> Checking if this meteor version supports --server-only"
@@ -136,6 +133,10 @@ if [ -z "$SERVER_ONLY_FLAG" ]; then
 fi
 
 meteor npm install
+
+
+header "Generate plugin import files"
+"$BUILD_DIR"/node_modules/.bin/reaction plugins load
 
 
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
