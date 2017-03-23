@@ -30,6 +30,7 @@ METEOR_VERSION=`cat "$BUILD_DIR/.meteor/release" | sed -e 's/METEOR@//'`
 
 mkdir -p "$BUILD_DIR/.heroku/node/"
 mkdir -p "$BUILD_DIR/.heroku/meteor/"
+mkdir -p "$BUILD_DIR/.heroku/build/"
 cd $BUILD_DIR
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/meteor/.meteor":$PATH
 
@@ -85,8 +86,8 @@ create_env() {
 
 
 header "Creating runtime environment"
-# create_env # can't pipe the whole thing because piping causes subshells, preventing exports
-# list_node_config
+create_env # can't pipe the whole thing because piping causes subshells, preventing exports
+list_node_config
 
 
 install_bins() {
@@ -103,13 +104,84 @@ install_bins
 
 
 header "Installing reaction-cli"
-which node
-which npm
-which meteor
-
 npm install reaction-cli
 
-"$BUILD_DIR"/node_modules/.bin/reaction -v
+
+header "Generate plugin import files"
+"$BUILD_DIR"/node_modules/.bin/reaction plugins Load
+
+
+#
+# Build the meteor app!
+#
+
+cd "$BUILD_DIR"
+
+# Determine if we have --server-only flag capability. Allow non-zero return from grep.
+echo "-----> Checking if this meteor version supports --server-only"
+set +e
+HAS_SERVER_ONLY=`HOME="$BUILD_DIR/.heroku/meteor" meteor help build | grep -e '--server-only'`
+set -e
+if [ -n "$HAS_SERVER_ONLY" ] ; then
+  SERVER_ONLY_FLAG='--server-only'
+else
+  SERVER_ONLY_FLAG=""
+fi
+# Remove the Android platform if we don't support the --server-only flag.  iOS
+# platform gets ignored properly.
+if [ -z "$SERVER_ONLY_FLAG" ]; then
+  echo "-----> Attempting to remove android platform."
+  HOME="$BUILD_DIR/.heroku/meteor" meteor remove-platform android || true
+  echo "-----> Moving on."
+fi
+
+meteor npm install
+
+
+# Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
+# bundling, or it will recurse, trying to bundle up its own bundling.
+
+echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
+BUNDLE_DEST=`mktemp -d "$BUILD_DIR/.heroku/build/"`
+
+# The actual invocation of `meteor build`!
+HOME="$BUILD_DIR/.heroku/meteor" meteor build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+
+# echo "-----> Moving built slug to $COMPILE_DIR/app"
+# mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
+# rmdir $BUNDLE_DEST
+
+# Run npm install on the built slug; only for `--production` dependencies.
+echo "-----> Installing npm production dependencies on built slug"
+if [ -e "$BUNDLE_DEST"/bundle/programs/server/package.json ]; then
+  cd "$BUNDLE_DEST"/bundle/programs/server
+  meteor npm install --production
+  cd "$BUILD_DIR"
+fi
+
+#
+# Environment
+#
+# Add an export of PATH which includes our compile dir, etc.
+# echo "-----> Adding PATH environment"
+# mkdir -p "$BUILD_DIR"/.profile.d
+# cat > "$BUILD_DIR"/.profile.d/path.sh <<EOF
+#   #!/bin/sh
+#   export PATH=\$HOME/$COMPILE_DIR_SUFFIX/bin:\$PATH
+#   export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$HOME/$COMPILE_DIR_SUFFIX/lib
+# EOF
+
+#
+# Extras
+#
+
+# source scripts in 'extra' dir, if any.  Create them for custom stuff like
+# binary dependencies, additional environment settings, etc.
+# echo "-----> Running extras"
+# for file in `ls "$BUILDPACK_DIR"/extra | sort`; do
+#   . "$BUILDPACK_DIR"/extra/$file
+# done
+
 
 header "Build succeeded!"
 summarize_build
