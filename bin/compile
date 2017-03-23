@@ -109,7 +109,7 @@ which meteor
 
 npm install reaction-cli
 
-reaction -v
+"$BUILD_DIR"/node_modules/.bin/reaction -v
 
 header "Build succeeded!"
 summarize_build
