@@ -39,5 +39,6 @@ install_meteor() {
     echo "Unable to download Meteor $version; does it exist?" && false
   fi
   chmod +x /tmp/install_meteor.sh
-  exec env HOME="$dir" /tmp/install_meteor.sh
+  HOME="$dir" bash /tmp/install_meteor.sh
+  chmod +x "$dir"/.meteor/meteor
 }

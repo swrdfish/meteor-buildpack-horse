@@ -31,7 +31,7 @@ METEOR_VERSION=`cat "$BUILD_DIR/.meteor/release" | sed -e 's/METEOR@//'`
 mkdir -p "$BUILD_DIR/.heroku/node/"
 mkdir -p "$BUILD_DIR/.heroku/meteor/"
 cd $BUILD_DIR
-export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/meteor/bin":$PATH
+export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/meteor/.meteor":$PATH
 
 
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
@@ -71,9 +71,9 @@ trap 'handle_failure' ERR
 
 ### Failures that should be caught immediately
 
-fail_invalid_package_json "."
-warn_prebuilt_modules "."
-warn_missing_package_json "."
+fail_invalid_package_json "$BUILD_DIR"
+warn_prebuilt_modules "$BUILD_DIR"
+warn_missing_package_json "$BUILD_DIR"
 
 
 create_env() {
@@ -91,8 +91,8 @@ header "Creating runtime environment"
 
 install_bins() {
   warn_node_engine "$NODE_VERSION"
-  install_nodejs "$NODE_VERSION" "./.heroku/node"
-  install_meteor "$METEOR_VERSION" "./.heroku/meteor"
+  install_nodejs "$NODE_VERSION" "$BUILD_DIR/.heroku/node"
+  install_meteor "$METEOR_VERSION" "$BUILD_DIR/.heroku/meteor"
   # install_npm "$NPM_VERSION" "$BUILD_DIR/.heroku/node"
   warn_old_npm
 }
@@ -103,6 +103,10 @@ install_bins
 
 
 header "Installing reaction-cli"
+which node
+which npm
+which meteor
+
 npm install reaction-cli
 
 reaction -v
