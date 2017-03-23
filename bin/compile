@@ -143,7 +143,7 @@ meteor npm install
 
 echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`$BUILD_DIR/.heroku/build/"`
-mkdir -p BUNDLE_DEST
+mkdir -p "$BUNDLE_DEST"
 
 # The actual invocation of `meteor build`!
 HOME="$BUILD_DIR/.heroku/meteor" meteor build $BUILD_OPTIONS --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
