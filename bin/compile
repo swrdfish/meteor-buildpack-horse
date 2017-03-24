@@ -139,6 +139,14 @@ header "Generate plugin import files"
 "$BUILD_DIR"/node_modules/.bin/reaction plugins load
 
 
+header "Server plugins list"
+cat server/plugins.js
+
+
+header "Server plugins list"
+cat client/plugins.js
+
+
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
 # bundling, or it will recurse, trying to bundle up its own bundling.
 
