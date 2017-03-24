@@ -40,5 +40,6 @@ install_meteor() {
   fi
   chmod +x /tmp/install_meteor.sh
   HOME="$dir" bash /tmp/install_meteor.sh
+  METEOR="$dir"/.meteor/meteor
   chmod +x "$dir"/.meteor/meteor
 }

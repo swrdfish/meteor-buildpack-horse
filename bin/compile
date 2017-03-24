@@ -117,7 +117,7 @@ cd "$BUILD_DIR"
 # Determine if we have --server-only flag capability. Allow non-zero return from grep.
 echo "-----> Checking if this meteor version supports --server-only"
 set +e
-HAS_SERVER_ONLY=`HOME="$BUILD_DIR/.heroku/meteor" meteor help build | grep -e '--server-only'`
+HAS_SERVER_ONLY=`HOME="$BUILD_DIR/.heroku/meteor" $METEOR help build | grep -e '--server-only'`
 set -e
 if [ -n "$HAS_SERVER_ONLY" ] ; then
   SERVER_ONLY_FLAG='--server-only'
@@ -128,11 +128,11 @@ fi
 # platform gets ignored properly.
 if [ -z "$SERVER_ONLY_FLAG" ]; then
   echo "-----> Attempting to remove android platform."
-  HOME="$BUILD_DIR/.heroku/meteor" meteor remove-platform android || true
+  HOME="$BUILD_DIR/.heroku/meteor" $METEOR remove-platform android || true
   echo "-----> Moving on."
 fi
 
-meteor npm install
+$METEOR npm install
 
 
 header "Generate plugin import files"
@@ -146,7 +146,7 @@ echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "/tmp/build-XXXX"`
 
 # The actual invocation of `meteor build`!
-HOME="$BUILD_DIR/.heroku/meteor" meteor build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+HOME="$BUILD_DIR/.heroku/meteor" $METEOR build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
 
 # echo "-----> Moving built slug to $COMPILE_DIR/app"
 # mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
@@ -156,7 +156,7 @@ HOME="$BUILD_DIR/.heroku/meteor" meteor build --server $ROOT_URL $SERVER_ONLY_FL
 echo "-----> Installing npm production dependencies on built slug"
 if [ -e "$BUNDLE_DEST"/bundle/programs/server/package.json ]; then
   cd "$BUNDLE_DEST"/bundle/programs/server
-  meteor npm install --production
+  $METEOR npm install --production
   mv $BUNDLE_DEST/bundle "$BUILD_DIR/.heroku/build/bundle"
   header "$BUILD_DIR/.heroku/build/bundle"
   rmdir $BUNDLE_DEST
