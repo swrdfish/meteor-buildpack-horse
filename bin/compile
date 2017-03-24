@@ -142,9 +142,11 @@ header "Generate plugin import files"
 header "Server plugins list"
 cat server/plugins.js
 
-
 header "Client plugins list"
 cat client/plugins.js
+
+header "Directory contents"
+ls -al
 
 
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
