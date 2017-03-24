@@ -28,13 +28,14 @@ BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 METEOR_VERSION=`cat "$BUILD_DIR/.meteor/release" | sed -e 's/METEOR@//'`
 
 
-mkdir -p "$BUILD_DIR/.heroku/node/"
-mkdir -p "$BUILD_DIR/.heroku/meteor/"
+rm -rf "$CACHE_DIR/*"
+mkdir -p "$CACHE_DIR/.heroku/node/"
+mkdir -p "$CACHE_DIR/.heroku/meteor/"
 mkdir -p "$BUILD_DIR/.heroku/build/"
+export PATH="$CACHE_DIR/.heroku/node/bin:$CACHE_DIR/.heroku/meteor/.meteor":$PATH
+
+
 cd $BUILD_DIR
-export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/meteor/.meteor":$PATH
-
-
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
@@ -92,8 +93,8 @@ list_node_config
 
 install_bins() {
   warn_node_engine "$NODE_VERSION"
-  install_nodejs "$NODE_VERSION" "$BUILD_DIR/.heroku/node"
-  install_meteor "$METEOR_VERSION" "$BUILD_DIR/.heroku/meteor"
+  install_nodejs "$NODE_VERSION" "$CACHE_DIR/.heroku/node"
+  install_meteor "$METEOR_VERSION" "$CACHE_DIR/.heroku/meteor"
   # install_npm "$NPM_VERSION" "$BUILD_DIR/.heroku/node"
   warn_old_npm
 }
@@ -115,7 +116,7 @@ cd "$BUILD_DIR"
 
 
 # Determine if we have --server-only flag capability. Allow non-zero return from grep.
-echo "-----> Checking if this meteor version supports --server-only"
+header "Checking if this meteor version supports --server-only"
 set +e
 HAS_SERVER_ONLY=`HOME="$BUILD_DIR/.heroku/meteor" $METEOR help build | grep -e '--server-only'`
 set -e
@@ -127,9 +128,9 @@ fi
 # Remove the Android platform if we don't support the --server-only flag.  iOS
 # platform gets ignored properly.
 if [ -z "$SERVER_ONLY_FLAG" ]; then
-  echo "-----> Attempting to remove android platform."
+  header "Attempting to remove android platform."
   HOME="$BUILD_DIR/.heroku/meteor" $METEOR remove-platform android || true
-  echo "-----> Moving on."
+  header "Moving on."
 fi
 
 $METEOR npm install
@@ -198,6 +199,6 @@ fi
 
 
 header "Build succeeded!"
-summarize_build
+# summarize_build
 
 
