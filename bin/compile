@@ -143,25 +143,25 @@ header "Server plugins list"
 cat server/plugins.js
 
 
-header "Server plugins list"
+header "Client plugins list"
 cat client/plugins.js
 
 
 # Now on to bundling. Don't put the bundle in $APP_CHECKOUT_DIR during
 # bundling, or it will recurse, trying to bundle up its own bundling.
 
-echo "-----> Building Meteor app with ROOT_URL: $ROOT_URL"
+header "Building Meteor app with ROOT_URL: $ROOT_URL"
 BUNDLE_DEST=`mktemp -d "/tmp/build-XXXX"`
 
 # The actual invocation of `meteor build`!
-HOME="$BUILD_DIR/.heroku/meteor" $METEOR build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
+meteor build --server $ROOT_URL $SERVER_ONLY_FLAG --directory $BUNDLE_DEST
 
 # echo "-----> Moving built slug to $COMPILE_DIR/app"
 # mv $BUNDLE_DEST/bundle "$COMPILE_DIR/app"
 # rmdir $BUNDLE_DEST
 
 # Run npm install on the built slug; only for `--production` dependencies.
-echo "-----> Installing npm production dependencies on built slug"
+header "Installing npm production dependencies on built slug"
 if [ -e "$BUNDLE_DEST"/bundle/programs/server/package.json ]; then
   cd "$BUNDLE_DEST"/bundle/programs/server
   $METEOR npm install --production
