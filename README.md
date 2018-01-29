@@ -1,14 +1,17 @@
 # Reaction Commerce Buildpack
 
+This buildpack is a fork of [meteor-buildpack-horse](https://github.com/swrdfish/meteor-buildpack-horse.git) with our
+modifications to ease deployment and overcome common failures (like boot timeout).
+
 To use this with heroku:
 
 1. Set up your app to [deploy to heroku with git](https://devcenter.heroku.com/articles/git).
 2. Set this repository as the buildpack URL:
 
-        heroku buildpacks:set https://github.com/swrdfish/meteor-buildpack-horse.git
+        heroku buildpacks:set https://github.com/Zanobo/reaction-buildpack.git
 
 3. Add the MongoLab addon:
-        
+
         heroku addons:create mongolab
 
 4. Set the `ROOT_URL` environment variable. This is required for bundling and running the app.  Either define it explicitly, or enable the [Dyno Metadata](https://devcenter.heroku.com/articles/dyno-metadata) labs addon to default to `https://<appname>.herokuapp.com`.
@@ -31,6 +34,20 @@ The following are some important environment variables for bundling and running 
  - `BUILDPACK_CLEAR_CACHE`: This buildpack stores the meteor installation in the [CACHE_DIR](https://devcenter.heroku.com/articles/buildpack-api#caching) to speed up subsequent builds. Set `BUILDPACK_CLEAR_CACHE=1` to clear this cache on startup.
  - `BUILD_OPTIONS`: Set to any additional options you'd like to add to the invocation of `meteor build`, for example `--debug` or `--allow-incompatible-update`.
 
+### Boot proxy
+
+Sometimes reaction takes too much time to start and Heroku thinks that there's a problem with your app. To sidestep this
+we have a simple proxy that answers every request until it's ready.
+
+It accepts the following environment variables:
+
+ - `USE_BOOT_PROXY`: Set `USE_BOOT_PROXY=1` to enable it. It's disabled by default.
+ - `PING_PATH`: The route we use to test if your app is ready. Defaults to `/`. You need to add a leading slash.
+ - `PING_INTERVAL`: Interval between probes, in seconds. Defaults to 1 second.
+ - `BOOT_TIMEOUT`: Maximum time to wait for your app in seconds. Defaults to 3600 (1 Hour). If reached we exit with an
+   error.
+ - `BOOTING_URL`: Proxies transparently to this url while your app is booting if provided.
+
 ## Extras
 
 The basic buildpack should function correctly for any normal-ish meteor app,
@@ -52,7 +69,3 @@ subdirectories.  Those directories are added to `$PATH` and
 
 So `$COMPILE_DIR/bin` etc are great places to put any extra binaries or stuff
 if you need to in custom extras.
-
-## Tips & Tricks
-
-Please help us add tips and tricks to the [wiki](https://github.com/AdmitHub/meteor-buildpack-horse/wiki) for further help, like usage with Dokku or other environments.
